@@ -1,13 +1,14 @@
 require 'trie'
 
 class WordList
-  attr :list, :lookup_table, :trie, :count
+  attr_reader :list
+  attr :lookup_table, :trie, :concat_count, :min_word_length
 
   def initialize
     @list = []
     @lookup_table = {}
     @trie = Trie.new
-    @count = 0
+    @concat_count = 0
   end
 
   def load_from_file(file)
@@ -24,26 +25,33 @@ class WordList
     !@trie[word].empty?
   end
 
+  def remove(word)
+    if self.include?(word)
+      @list.delete(word)
+      @trie.delete_pair(word, word.length)
+    end
+  end
+
   def longest_concat_word
-    sorted_list_by_length.each do |word|
+    sorted_list_by_length_dsc.each do |word|
       return word if concat_can_form?(word, true)
     end
     nil
   end
 
   def num_of_concats
-    @count = 0
-    sorted_list_by_length.each do |word|
-      if concat_can_form?(word, true)
-        @count += 1
-        puts word
+    @concat_count = 0
+    sorted_list_by_length_dsc.each do |word|
+      if word.length >= (2 * min_word_length) &&
+         concat_can_form?(word, true)
+          @concat_count += 1
       end
     end
-    @count
+    @concat_count
   end
 
 private
-  def sorted_list_by_length
+  def sorted_list_by_length_dsc
     @list.sort{|a,b| b.length <=> a.length}
   end
 
@@ -55,9 +63,9 @@ private
     @trie.delete_pair(word, word.length) if first_call
 
     word.length.downto(1) do |num|
-      if !@trie[word[0...num]].empty?
-        if (num == word.length) ||
-           concat_can_form?(word[num...word.length])
+      if !@trie[word[0...num]].empty? #if substring is in trie
+        if (num == word.length) || #and if entire word param is in trie or
+           concat_can_form?(word[num...word.length]) #(substring and) remainder is in trie
           @lookup_table[word] = true if first_call
           @trie.insert(word, word.length) if first_call
           return true
@@ -68,6 +76,10 @@ private
     @lookup_table[word] = false if first_call
     @trie.insert(word, word.length) if first_call
     false
+  end
+
+  def min_word_length
+    @min_word_length ||= @list.sort{|a,b| a.length <=> b.length}.first.length
   end
 
 end
