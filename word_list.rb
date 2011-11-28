@@ -55,6 +55,8 @@ private
     @list.sort{|a,b| b.length <=> a.length}
   end
 
+  #TODO: lookup_table is not helping how I'd like it to,
+  #      it should short-circuit on shorter concatenated words
   def concat_can_form?(word, first_call=false)
     if @lookup_table.has_key?(word)
       return @lookup_table[word]
