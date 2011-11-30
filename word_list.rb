@@ -55,10 +55,8 @@ private
     @list.sort{|a,b| b.length <=> a.length}
   end
 
-  #TODO: lookup_table is not helping how I'd like it to,
-  #      it should short-circuit on shorter concatenated words
   def concat_can_form?(word, first_call=false)
-    if @lookup_table.has_key?(word)
+    if !first_call && @lookup_table.has_key?(word)
       return @lookup_table[word]
     end
 
@@ -68,14 +66,14 @@ private
       if !@trie[word[0...num]].empty? #if substring is in trie
         if (num == word.length) || #and if entire word param is in trie or
            concat_can_form?(word[num...word.length]) #(substring and) remainder is in trie
-          @lookup_table[word] = true if first_call
+          @lookup_table[word] = true
           @trie.insert(word, word.length) if first_call
           return true
         end
       end
     end
 
-    @lookup_table[word] = false if first_call
+    @lookup_table[word] = false
     @trie.insert(word, word.length) if first_call
     false
   end
